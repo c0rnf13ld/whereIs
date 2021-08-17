@@ -12,5 +12,5 @@ To run the script you can install ngrok in the same folder as the script, or the
 python3 whereIs.py <port>
 example: python3 whereIs.py 4343
 
-Port 443 is not available, it could give errors
+note: Port 443 is not available, it could give errors
 ```
