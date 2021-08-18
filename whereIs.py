@@ -113,6 +113,10 @@ signal.signal(signal.SIGINT, def_handler)
 
 if __name__ == '__main__':
 
+	if os.environ.get("USER") != "root": # Check if root
+		print(lgred + "[*] You must run the script as root.")
+		sys.exit(1)
+
 	internet = checkConnection()
 	if internet:
 		banner()
