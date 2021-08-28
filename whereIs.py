@@ -8,6 +8,37 @@ init(autoreset=True)
 # colors
 lgcyan, ylw, lgred, mgta, green = Fore.LIGHTCYAN_EX, Fore.YELLOW, Fore.LIGHTRED_EX, Fore.MAGENTA, Fore.GREEN
 
+# Global Variables
+get_info_url = "https://whatismyipaddress.com/ip/"
+
+def getInfoTarget(ip):
+	header = {"User-Agent" : "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36"}
+	r = requests.get(get_info_url + ip, headers=header)
+	r.encoding = "utf-8" # Change Encoding
+	getInfo(r)
+
+def getInfo(r):
+	try:
+		hostname = re.findall("<span>Hostname:<\/span> <span><a href=\".+\">(.*?)<\/a>|<span>Hostname:<\/span> <span>(.*?)<\/span>", r.text)[0]
+		isp = re.findall("<span>ISP:<\/span> <span><a href=\".+\">(.*?)<\/a>|<span>ISP:<\/span> <span>(.*?)<\/span>", r.text)[0]
+		organization = re.findall("<span>Organization:<\/span> <span><a href=\".+\">(.*?)<\/a>|<span>Organization:<\/span> <span>(.*?)<\/span>", r.text)[0]
+		services = re.findall("<span>Services:<\/span> <span><a href=\".+\">(.*?)<\/a>|<span>Services:<\/span> <span>(.*?)<\/span>", r.text)[0]
+		continent = re.findall("<span>Continent:<\/span> <span><a href=\".+\">(.*?)<\/a>|<span>Continent:<\/span> <span>(.*?)<\/span>", r.text)[0]
+		country = re.findall("<span>Country:<\/span> <span><a href=\".+\">(.*?)<\/a>|<span>Country:<\/span> <span>(.*?)<\/span>", r.text)[0]
+		region = re.findall("<span>State/Region:<\/span> <span><a href=\".+\">(.*?)<\/a>|<span>State/Region:<\/span> <span>(.*?)<\/span>", r.text)[0]
+		city = re.findall("<span>City:<\/span> <span><a href=\".+\">(.*?)<\/a>|<span>City:<\/span> <span>(.*?)<\/span>", r.text)[0]
+
+		print("\n\t[*] Hostname      : " + ''.join(hostname))
+		print("\t[*] ISP           : " + ''.join(isp))
+		print("\t[*] Organization  : " + ''.join(organization))
+		print("\t[*] Services      : " + ''.join(services))
+		print("\t[*] Continent     : " + ''.join(continent))
+		print("\t[*] Country       : " + ''.join(country))
+		print("\t[*] Region        : " + ''.join(region))
+		print("\t[*] City          : " + ''.join(city) + "\n")
+	except IndexError:
+		print("\n\t[!] Something went wrong!\n")
+
 def banner():
 	print(ylw + """  __________________________________""")
 	print(ylw + """ |              __  __   __ ___  ___|""")
@@ -106,23 +137,23 @@ def capLink():
 def def_handler(sig, frame):
 	print(lgred + "\n\n[*] Exiting...\n")
 	os.killpg(os.getpgid(php_process.pid), signal.SIGTERM) # SIGTERM es la señal que generalmente se usa para terminar administrativamente un proceso
-	os.killpg(os.getpgid(ngrok_process.pid), signal.SIGTERM)
 	sys.exit(1)
 
 signal.signal(signal.SIGINT, def_handler)
 
 if __name__ == '__main__':
 
-	if os.environ.get("USER") != "root": # Check if root
-		print(lgred + "[*] You must run the script as root.")
+	if os.environ.get("USER") != "root":
+		print(lgred + "\n\n[*] You must run the script as root.\n")
 		sys.exit(1)
 
 	internet = checkConnection()
+
 	if internet:
 		banner()
 		print()
 		if "ip_addr.txt" in os.listdir("ip"):
-			os.remove("ip_addr.txt")
+			os.remove("ip/ip_addr.txt")
 
 		dir_content = os.listdir()
 		if not "ngrok" in dir_content:
@@ -155,5 +186,8 @@ if __name__ == '__main__':
 				print(ylw + "\t\t[-] Saved in ip/ip.txt\n")
 				verify = subprocess.Popen("cat ip/ip_addr.txt", shell=True, text=True, stdout=subprocess.PIPE)
 				out, err = verify.communicate()
-				print(out)
+				ip = re.findall("IP: (.*?)\n", out)[0]
+				print(out[:-2])
+				print()
+				getInfoTarget(ip)
 				os.remove("ip/ip_addr.txt")
